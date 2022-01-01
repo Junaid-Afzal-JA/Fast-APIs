@@ -3,7 +3,6 @@ from models_db import models, schemas
 from sqlalchemy.orm import session
 from models_db.db_connection import engine, SessionLocal
 
-
 app = FastAPI()
 models.Base.metadata.create_all(engine)
 
@@ -29,13 +28,17 @@ def create_blog(request: schemas.Blog,
     Returns:
         blg (Blog): Created blog information
     """
-    blg = models.Blog(title=request.title,
-                      description=request.description
-                      )
-    db.add(blg)
-    db.commit()
-    db.refresh(blg)
-    return blg
+    try:
+        blg = models.Blog(title=request.title,
+                          description=request.description
+                          )
+        db.add(blg)
+        db.commit()
+        db.refresh(blg)
+        return {'detail': f'Blog created with title {request.title}'}
+
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_306_RESERVED, detail=f'Something gone wrong. {e}')
 
 
 @app.get('/blogs', status_code=200)
@@ -61,7 +64,6 @@ def get_specific_blog(
         response: Response,
         blog_id: int = Path(None, description='Id of blog you want to view.', gt=0),
         db: session = Depends(get_db)) -> dict:
-
     """
     Return Specific Blog
 
@@ -86,7 +88,6 @@ def get_specific_blog(
 def get_blog_by_name(
         blog_title: str,
         db: session = Depends(get_db)) -> dict:
-
     """
     Return Specific Blog
 
@@ -185,6 +186,7 @@ def get_specific_user(uid: int) -> dict:
     Parameters:
 
         uid (int): ID of user
+
     Returns:
 
         result (dict): Response in json format.
